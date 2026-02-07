@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProArena Esports | BGMI & Free Fire Tournaments 2026</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            get,
+            onValue,
+            push
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjxCgZWsqnIEMaCSCu7ZJykpAFGnX0kFY",
+            authDomain: "esports-konkan.firebaseapp.com",
+            projectId: "esports-konkan",
+            storageBucket: "esports-konkan.firebasestorage.app",
+            messagingSenderId: "924344762740",
+            appId: "1:924344762740:web:11f8d5b158ee0dad096c21",
+            measurementId: "G-33LMR2QPYC",
+            databaseURL: "https://esports-konkan-default-rtdb.firebaseio.com/"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // Make available globally
+        window.firebaseApp = app;
+        window.firebaseAuth = auth;
+        window.firebaseDatabase = database;
+        window.firebaseProvider = provider;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebasePush = push;
+        window.signInWithPopup = signInWithPopup;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+        
+        console.log("Firebase initialized successfully!");
+    </script>
+    
+    <style>
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0a0a1f;
+            --secondary: #151530;
+            --accent: #ff4655;
+            --accent-blue: #00e0ff;
+            --accent-purple: #9d4edd;
+            --success: #00ff88;
+            --danger: #ff4757;
+            --text: #ffffff;
+            --text-muted: #b0b0d0;
+            --border: #2a2a4a;
+            --card: #1a1a35;
+            --gradient: linear-gradient(135deg, #ff4655 0%, #9d4edd 50%, #00e0ff 100%);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 70, 85, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(157, 78, 221, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(10, 10, 31, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--accent);
+            padding: 15px 0;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a:hover,
+        nav a.active {
+            background: rgba(255, 70, 85, 0.15);
+            color: var(--accent);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after,
+        nav a.active::after {
+            width: 70%;
+        }
+
+        /* User Section */
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 70, 85, 0.1);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 70, 85, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-google {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 150px 0 80px;
+            text-align: center;
+            background: linear-gradient(rgba(10,10,31,0.9), rgba(10,10,31,0.9)),
+                        url('https://images.unsplash.com/photo-1511512578047-dfb367046420?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            color: var(--text-muted);
+        }
+
+        /* Tournaments */
+        .tournaments {
+            padding: 80px 0;
+            background: var(--secondary);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+
+        .tournament-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .tournament-card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tournament-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .tournament-card h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+        }
+
+        .entry-fee {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Google Form Section */
+        .registration {
+            padding: 80px 0;
+            background: var(--primary);
+        }
+
+        .form-container {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 40px;
+            border: 2px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-container iframe {
+            width: 100%;
+            height: 1300px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        /* Payment Section */
+        .payment {
+            padding: 80px 0;
+            background: var(--secondary);
+        }
+
+        .payment-box {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 40px;
+            border: 2px solid var(--border);
+            text-align: center;
+        }
+
+        .upi-id {
+            background: rgba(0, 224, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            border: 2px dashed var(--accent-blue);
+            word-break: break-all;
+        }
+
+        .instructions {
+            text-align: left;
+            margin-top: 30px;
+            background: rgba(255, 70, 85, 0.05);
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .instructions h4 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            padding-left: 5px;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 80px 0;
+            background: var(--primary);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .contact-card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .contact-card i {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        .contact-card h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Registered Players */
+        .players {
+            padding: 80px 0;
+            background: var(--secondary);
+        }
+
+        .players-container {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 2px solid var(--border);
+        }
+
+        .players-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .players-table th {
+            background: rgba(255, 70, 85, 0.1);
+            color: var(--accent);
+            padding: 15px;
+            text-align: left;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .players-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .players-table tr:hover {
+            background: rgba(255, 70, 85, 0.05);
+        }
+
+        .status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status.paid {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success);
+        }
+
+        .status.pending {
+            background: rgba(255, 170, 0, 0.2);
+            color: orange;
+        }
+
+        /* Footer */
+        footer {
+            background: #050515;
+            padding: 60px 0 30px;
+            border-top: 2px solid var(--accent);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h4 {
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: var(--text);
+            font-size: 1.5rem;
+            transition: 0.3s;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-links a:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid var(--accent);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 70, 85, 0.1);
+            color: var(--accent);
+        }
+
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .user-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-container iframe {
+                height: 1000px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <div class="logo-icon">??</div>
+                <div class="logo-text">PROARENA ESPORTS</div>
+            </div>
+            
+            <nav>
+                <ul>
+                    <li><a href="#home" class="active">Home</a></li>
+                    <li><a href="#tournaments">Tournaments</a></li>
+                    <li><a href="#register">Register</a></li>
+                    <li><a href="#payment">Payment</a></li>
+                    <li><a href="#players">Players</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            
+            <div class="user-section">
+                <div id="userInfo" style="display: none;">
+                    <div class="user-info">
+                        <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+                        <span id="userName" class="user-name"></span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+                <button id="loginBtn" class="btn btn-google" onclick="googleLogin()">
+                    <i class="fab fa-google"></i> Login with Google
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>PRO ARENA ESPORTS 2026</h1>
+            <p>Join India's biggest BGMI & Free Fire tournaments. Compete with top players, showcase your skills, and win amazing prizes!</p>
+            <a href="#register" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Register Now
+            </a>
+        </div>
+    </section>
+
+    <!-- Tournaments Section -->
+    <section class="tournaments" id="tournaments">
+        <div class="container">
+            <h2 class="section-title">OUR TOURNAMENTS</h2>
+            <div class="tournament-grid">
+                <div class="tournament-card">
+                    <span class="entry-fee">?200</span>
+                    <h3>BGMI TOURNAMENT</h3>
+                    <p><i class="fas fa-calendar"></i> <strong>Date:</strong> Coming Soon</p>
+                    <p><i class="fas fa-clock"></i> <strong>Time:</strong> 3:00 PM Onwards</p>
+                    <p><i class="fas fa-users"></i> <strong>Mode:</strong> Squad (4v4)</p>
+                    <p><i class="fas fa-map"></i> <strong>Type:</strong> Custom Rooms</p>
+                    <p><i class="fas fa-trophy"></i> <strong>Prizes:</strong> Exciting Rewards</p>
+                </div>
+                
+                <div class="tournament-card">
+                    <span class="entry-fee">?150</span>
+                    <h3>FREE FIRE TOURNAMENT</h3>
+                    <p><i class="fas fa-calendar"></i> <strong>Date:</strong> Coming Soon</p>
+                    <p><i class="fas fa-clock"></i> <strong>Time:</strong> 2:00 PM Onwards</p>
+                    <p><i class="fas fa-users"></i> <strong>Mode:</strong> Squad (4v4)</p>
+                    <p><i class="fas fa-map"></i> <strong>Type:</strong> Ranked Matches</p>
+                    <p><i class="fas fa-trophy"></i> <strong>Prizes:</strong> Amazing Rewards</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Section -->
+    <section class="registration" id="register">
+        <div class="container">
+            <h2 class="section-title">REGISTRATION FORM</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: var(--text-muted); max-width: 800px; margin-left: auto; margin-right: auto;">
+                Fill the Google Form below to register for the tournament. All details will be sent directly to our admin team.
+            </p>
+            
+            <div class="form-container">
+                <!-- Your Google Form -->
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSej8HMeykMnUAWZl3O6cAYJ-Xpl9fva7aKwACpREstlJHGrPQ/viewform?embedded=true" 
+                        width="100%" 
+                        height="1300" 
+                        frameborder="0" 
+                        marginheight="0" 
+                        marginwidth="0">
+                    Loading…
+                </iframe>
+                
+                <div style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(0, 224, 255, 0.1); border-radius: 10px;">
+                    <h4><i class="fas fa-info-circle"></i> Important Information</h4>
+                    <p style="margin-top: 10px; color: var(--text-muted);">
+                        After submitting the form, please proceed to the payment section below to complete your registration.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Section -->
+    <section class="payment" id="payment">
+        <div class="container">
+            <h2 class="section-title">PAYMENT DETAILS</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: var(--text-muted); max-width: 800px; margin-left: auto; margin-right: auto;">
+                Complete your registration by making the payment. Send screenshot after payment for verification.
+            </p>
+            
+            <div class="payment-box">
+                <h3><i class="fas fa-rupee-sign"></i> Tournament Entry Fees</h3>
+                <div style="display: flex; justify-content: center; gap: 40px; margin: 20px 0 30px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <h4 style="color: var(--accent);">BGMI</h4>
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">?200</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4 style="color: var(--accent-blue);">Free Fire</h4>
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--accent-blue);">?150</div>
+                    </div>
+                </div>
+                
+                <h4><i class="fas fa-qrcode"></i> Send Payment To This UPI ID:</h4>
+                <div class="upi-id" id="upiIdDisplay">
+                    govindsawant1975-4@oksbi
+                </div>
+                
+                <div style="margin: 25px 0;">
+                    <button class="btn btn-primary" onclick="copyUPI()">
+                        <i class="fas fa-copy"></i> Copy UPI ID
+                    </button>
+                </div>
+                
+                <div class="instructions">
+                    <h4><i class="fas fa-list-ol"></i> Payment & Verification Process:</h4>
+                    <ol>
+                        <li>Open your UPI app (Google Pay, PhonePe, Paytm, etc.)</li>
+                        <li>Send the correct amount to the UPI ID shown above</li>
+                        <li>Take a clear screenshot of the successful transaction</li>
+                        <li>WhatsApp the screenshot to any contact number below with your name</li>
+                        <li>Your registration will be verified within 24 hours</li>
+                        <li>Check your status in the Registered Players section</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registered Players -->
+    <section class="players" id="players">
+        <div class="container">
+            <h2 class="section-title">REGISTERED PLAYERS</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: var(--text-muted); max-width: 800px; margin-left: auto; margin-right: auto;">
+                List of players who have completed registration and payment verification
+            </p>
+            
+            <div class="players-container">
+                <div id="playersLoading" class="spinner"></div>
+                <table class="players-table" id="playersTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Game</th>
+                            <th>Username/UID</th>
+                            <th>Payment Status</th>
+                            <th>Registered Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersList">
+                        <!-- Players will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">CONTACT US</h2>
+            <p style="text-align: center; margin-bottom: 30px; color: var(--text-muted); max-width: 800px; margin-left: auto; margin-right: auto;">
+                For registration assistance, payment verification, and tournament inquiries
+            </p>
+            
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <i class="fas fa-user-tie"></i>
+                    <h4>Shantaram Sawant</h4>
+                    <p>Tournament Organizer</p>
+                    <p><i class="fas fa-phone"></i> +91 9511843840</p>
+                    <p><i class="fas fa-envelope"></i> sawantbhagyesh98@gmail.com</p>
+                </div>
+                
+                <div class="contact-card">
+                    <i class="fas fa-user-headset"></i>
+                    <h4>Madhukar Kerkar</h4>
+                    <p>Support Manager</p>
+                    <p><i class="fas fa-phone"></i> +91 98817 33570</p>
+                    <p><i class="fas fa-whatsapp"></i> WhatsApp Available</p>
+                </div>
+                
+                <div class="contact-card">
+                    <i class="fas fa-user-cog"></i>
+                    <h4>Shivraj Naik</h4>
+                    <p>Technical Support</p>
+                    <p><i class="fas fa-phone"></i> +91 83297 83023</p>
+                    <p><i class="fas fa-whatsapp"></i> WhatsApp Available</p>
+                </div>
+                
+                <div class="contact-card">
+                    <i class="fas fa-question-circle"></i>
+                    <h4>Payment Help</h4>
+                    <p>Send payment screenshot to any contact</p>
+                    <p><strong>UPI ID:</strong> govindsawant1975-4@oksbi</p>
+                    <p><strong>Email:</strong> sawantbhagyesh98@gmail.com</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ProArena Esports</h4>
+                    <p>Konkan's premier esports tournament organizer. Professional BGMI and Free Fire competitions with fair play and exciting prizes.</p>
+                    <div class="social-links">
+                        <a href="https://wa.me/919511843840" target="_blank" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="#" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" title="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="#" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Tournament Info</h4>
+                    <p><i class="fas fa-gamepad"></i> BGMI: ?200 Entry</p>
+                    <p><i class="fas fa-gamepad"></i> Free Fire: ?150 Entry</p>
+                    <p><i class="fas fa-calendar-alt"></i> Dates: Coming Soon</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Online Tournament</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul style="list-style: none; line-height: 2;">
+                        <li><a href="#home" style="color: var(--text-muted); text-decoration: none;">Home</a></li>
+                        <li><a href="#tournaments" style="color: var(--text-muted); text-decoration: none;">Tournaments</a></li>
+                        <li><a href="#register" style="color: var(--text-muted); text-decoration: none;">Registration</a></li>
+                        <li><a href="#payment" style="color: var(--text-muted); text-decoration: none;">Payment</a></li>
+                        <li><a href="#contact" style="color: var(--text-muted); text-decoration: none;">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2026 ProArena Esports. All rights reserved. | Designed for the gaming community</p>
+                <p style="margin-top: 10px; font-size: 0.8rem;">
+                    Admin Email: sawantbhagyesh98@gmail.com | UPI: govindsawant1975-4@oksbi
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3 style="text-align: center; margin-bottom: 30px;">Login Required</h3>
+            <p style="text-align: center; margin-bottom: 30px; color: var(--text-muted);">
+                Please login with Google to view registered players and manage your profile.
+            </p>
+            <button class="btn btn-google" onclick="googleLogin()" style="width: 100%; justify-content: center;">
+                <i class="fab fa-google"></i> Login with Google
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Authentication
+        let currentUser = null;
+        const ADMIN_EMAIL = "sawantbhagyesh98@gmail.com";
+        const UPI_ID = "govindsawant1975-4@oksbi";
+        
+        // Initialize Firebase Auth State
+        window.onAuthStateChanged(window.firebaseAuth, (user) => {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                showUserInfo(user);
+                checkAdminAccess(user.email);
+                loadRegisteredPlayers();
+            } else {
+                // User is signed out
+                currentUser = null;
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginBtn').style.display = 'block';
+            }
+        });
+        
+        // Google Login
+        async function googleLogin() {
+            try {
+                const result = await window.signInWithPopup(window.firebaseAuth, window.firebaseProvider);
+                const user = result.user;
+                
+                // Save user info to database
+                const userRef = window.firebaseRef(window.firebaseDatabase, 'users/' + user.uid);
+                await window.firebaseSet(userRef, {
+                    email: user.email,
+                    name: user.displayName,
+                    photoURL: user.photoURL,
+                    lastLogin: new Date().toISOString()
+                });
+                
+                showMessage('Login successful! Welcome ' + user.displayName, 'success');
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('Login failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Logout
+        async function logout() {
+            try {
+                await window.signOut(window.firebaseAuth);
+                showMessage('Logged out successfully', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+                showMessage('Logout failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Show user info
+        function showUserInfo(user) {
+            document.getElementById('userInfo').style.display = 'flex';
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userName').textContent = user.displayName || user.email;
+            document.getElementById('userAvatar').src = user.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.displayName || user.email) + '&background=ff4655&color=fff';
+        }
+        
+        // Check admin access
+        function checkAdminAccess(email) {
+            if (email === ADMIN_EMAIL) {
+                console.log('Admin access granted');
+                // You can add admin features here
+            }
+        }
+        
+        // Copy UPI ID
+        function copyUPI() {
+            navigator.clipboard.writeText(UPI_ID).then(() => {
+                showMessage('UPI ID copied to clipboard: ' + UPI_ID, 'success');
+            }).catch(err => {
+                showMessage('Failed to copy UPI ID', 'error');
+            });
+        }
+        
+        // Load registered players from Firebase
+        async function loadRegisteredPlayers() {
+            try {
+                const playersRef = window.firebaseRef(window.firebaseDatabase, 'registrations');
+                window.firebaseOnValue(playersRef, (snapshot) => {
+                    const playersList = document.getElementById('playersList');
+                    const playersTable = document.getElementById('playersTable');
+                    const playersLoading = document.getElementById('playersLoading');
+                    
+                    playersLoading.style.display = 'none';
+                    playersTable.style.display = 'table';
+                    playersList.innerHTML = '';
+                    
+                    if (snapshot.exists()) {
+                        const players = snapshot.val();
+                        Object.keys(players).forEach(key => {
+                            const player = players[key];
+                            const row = document.createElement('tr');
+                            
+                            row.innerHTML = `
+                                <td>${player.name || 'N/A'}</td>
+                                <td>${player.game || 'N/A'}</td>
+                                <td>${player.uid || player.username || 'N/A'}</td>
+                                <td><span class="status ${player.paymentStatus || 'pending'}">${player.paymentStatus === 'paid' ? '? Paid' : '? Pending'}</span></td>
+                                <td>${new Date(player.timestamp || Date.now()).toLocaleDateString()}</td>
+                            `;
+                            
+                            playersList.appendChild(row);
+                        });
+                    } else {
+                        playersList.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <i class="fas fa-users"></i> No players registered yet
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading players:', error);
+                document.getElementById('playersLoading').style.display = 'none';
+            }
+        }
+        
+        // Smooth scrolling
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetSection.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+                
+                // Update active nav
+                document.querySelectorAll('nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // Update active nav on scroll
+        window.addEventListener('scroll', function() {
+            let current = '';
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= (sectionTop - 100)) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // Show message
+        function showMessage(text, type) {
+            // Create message element
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            message.style.position = 'fixed';
+            message.style.top = '100px';
+            message.style.right = '20px';
+            message.style.zIndex = '3000';
+            message.style.maxWidth = '300px';
+            
+            document.body.appendChild(message);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                message.style.opacity = '0';
+                message.style.transform = 'translateX(100px)';
+                setTimeout(() => {
+                    document.body.removeChild(message);
+                }, 300);
+            }, 5000);
+        }
+        
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Website loaded successfully!');
+            
+            // Set UPI ID
+            document.getElementById('upiIdDisplay').textContent = UPI_ID;
+            
+            // Check if user is already logged in
+            if (window.firebaseAuth.currentUser) {
+                currentUser = window.firebaseAuth.currentUser;
+                showUserInfo(currentUser);
+                checkAdminAccess(currentUser.email);
+            }
+        });
+    </script>
+</body>
+</html>
